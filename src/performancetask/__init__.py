@@ -2,8 +2,10 @@ import argparse
 
 from performancetask.apriori import (
     filter_validate_support,
+    generate_association_rules,
     get_k_1,
     get_k_2,
+    get_k_3,
     get_product_set,
 )
 from performancetask.sheet_handler import extract_table_entities
@@ -15,11 +17,12 @@ CONFIDENCE = 0.5
 SUPPORT = 0.04
 
 
-arg_parser = argparse.ArgumentParser(description="West Coast Apriori Result.")
-arg_parser.add_argument(
-    "--print-data", action="store_true", help="Print the extracted data"
-)
-args = arg_parser.parse_args()
+def build_arg_parser() -> argparse.ArgumentParser:
+    arg_parser = argparse.ArgumentParser(description="West Coast Apriori Result.")
+    arg_parser.add_argument(
+        "--print-data", action="store_true", help="Print the extracted data"
+    )
+    return arg_parser
 
 
 def get_records() -> list:
@@ -29,6 +32,7 @@ def get_records() -> list:
 
 
 def main() -> None:
+    args = build_arg_parser().parse_args()
 
     records = get_records()
 
@@ -64,3 +68,22 @@ def main() -> None:
         print("\nK-2 Itemsets (Accepted Support):")
         for itemset in accepted_k_2_itemsets:
             print(itemset)
+
+    k_3_itemsets = get_k_3(accepted_k_2_itemsets, records)
+    if args.print_data:
+        print("\nK-3 Itemsets:")
+        for itemset in k_3_itemsets:
+            print(itemset)
+
+    accepted_k_3_itemsets = filter_validate_support(k_3_itemsets, SUPPORT)
+    if args.print_data:
+        print("\nK-3 Itemsets (Accepted Support):")
+        for itemset in accepted_k_3_itemsets:
+            print(itemset)
+
+    frequent_itemsets = accepted_k_1_itemsets + accepted_k_2_itemsets + accepted_k_3_itemsets
+    association_rules = generate_association_rules(frequent_itemsets, CONFIDENCE, SUPPORT)
+    if args.print_data:
+        print("\nAssociation Rules:")
+        for rule in association_rules:
+            print(rule)
